@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-"""This module defines a class User"""
+"""This module defines a User class"""
 from models.base_model import BaseModel, Base
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import relationship
+from models.place import Place
 
 class User(BaseModel, Base):
     """This class defines a user by various attributes
@@ -18,3 +19,4 @@ class User(BaseModel, Base):
     password = Column(String(128), nullable=False)
     first_name = Column(String(128))
     last_name = Column(String(128))
+    places = relationship("place", backref="user", cascade="all, delete")
