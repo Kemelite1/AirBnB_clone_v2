@@ -12,57 +12,73 @@ from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
 
+HBNB_DB_NAME = os.environ.get("HBNB_MYSQL_DB")
+HBNB_USER = os.environ.get("HBNB_MYSQL_USER")
+HBNB_PWD = os.environ.get("HBNB_MYSQL_PWD")
+HBNB_HOST = os.environ.get("HBNB_MYSQL_HOST")
+HBNB_ENV = os.environ.get("HBNB_ENV")
+
+
 class DBStorage:
-    """Manages the database storage for HBNB models"""
+    """mysql database storage"""
+
     __engine = None
     __session = None
 
-    def __init__(self):
-        """Creates a new instance of DBStorage"""
-        hbnb_user = os.getenv("HBNB_MYSQL_USER")
-        hbnb_pwd = os.getenv("HBNB_MYSQL_PWD")
-        hbnb_host = os.getenv("HBNB_MYSQL_HOST", "localhost")
-        hbnb_db = os.getenv("HBNB_MYSQL_DB")
-        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}:3306/{}'.format(hbnb_user, hbnb_pwd, hbnb_db), pool_pre_ping=True)
-        if env == "test":
+    def __init__(self) -> None:
+        """Initialize the database"""
+        self.__engine = create_engine(
+            "mysql+mysqldb://{}:{}@{}/{}".format(
+                HBNB_USER, HBNB_PWD, HBNB_HOST, HBNB_DB_NAME
+            ),
+            pool_pre_ping=True,
+        )
+
+        if HBNB_ENV == "test":
             Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
-        """returns a dictionary of __object"""
-        dictionary = {}
-        if cls:
-            if type(cls) is str:
-                cls = eval(cls)
-                query = self.__session.query(cls)
-                for element in query:
-                    key = "{}.{}".format(type(element).__name__, element.id)
-                    dictionary[key] = element
+        """gets all objects in the database"""
+        objs = {}
 
+        if cls is not None:
+            if type(cls) == str:
+                cls = eval(cls)
+            queries = self.__session.query(cls).all()
+            for query in queries:
+                del query._sa_instance_state
+                objs.update({"{}.{}".format(query.__class__.__name__, query.id): query})
+            return objs
         else:
-            lists = [User, State, City, Place, Review, Amenity]
-            for c in lists:
-                query = self.__session.query(c)
-                for element in query:
-                    key = "{}.{}".format(type(element).__name__, element.id)
-                    dictionary[key] = element
-        return dictionary
+            classes = [User, City, State, Place, Review, Amenity]
+            for class_ in classes:
+                queries = self.__session.query(class_).all()
+                for query in queries:
+                    del query._sa_instance_state
+                    objs.update(
+                        {"{}.{}".format(query.__class__.__name__, query.id): query}
+                    )
+            return objs
 
     def new(self, obj):
-        """Add the object to the current database session"""
+        """add a new object to the database"""
         self.__session.add(obj)
 
     def save(self):
-        """commit all changes of the current database session"""
+        """save the object to the database"""
         self.__session.commit()
 
     def delete(self, obj=None):
-        """Delete an element from the current database table"""
+        """delete the object from the database"""
         if obj is not None:
-            self.__session.delete(obj)
+            queries = self.__session.query(obj).all()
+            for query in queries:
+                if query.id == obj.id:
+                    self.__session.delete(query)
 
     def reload(self):
-        """creates table and current database - configuration"""
+        """reload the session"""
         Base.metadata.create_all(self.__engine)
-        Session = sessionmaker(bind=self, expire_on_commit=False)
-        self.__session = scoped_session(session)
-
+        some_session = sessionmaker(bind=self.__engine, expire_on_commit=False)
+        Session = scoped_session(some_session)
+        self.__session = Session()
