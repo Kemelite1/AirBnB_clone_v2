@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 """This module defines a class to manage file storage for hbnb clone"""
+import json
+
+
 class FileStorage:
     """This class manages storage of hbnb models in JSON format"""
 
@@ -38,7 +41,7 @@ class FileStorage:
             json.dump(temp, f)
 
     def delete(self, obj=None):
-        """delete obj from __objects if its inside"""
+        """delete obj from __objects if it’s inside"""
         if obj is not None:
             key = obj.__class__.__name__ + '.' + obj.id
             if key in self.__objects:
