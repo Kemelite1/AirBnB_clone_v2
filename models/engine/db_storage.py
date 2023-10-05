@@ -1,16 +1,16 @@
 #!/usr/bin/python3
-"""Database storage for HBNB"""
 import os
+
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
-from models.base_model import Base
-from models.state import State
-from models.city import City
-from models.user import User
+
 from models.amenity import Amenity
+from models.base_model import Base
+from models.city import City
 from models.place import Place
 from models.review import Review
+from models.state import State
+from models.user import User
 
 HBNB_DB_NAME = os.environ.get("HBNB_MYSQL_DB")
 HBNB_USER = os.environ.get("HBNB_MYSQL_USER")
@@ -82,3 +82,4 @@ class DBStorage:
         some_session = sessionmaker(bind=self.__engine, expire_on_commit=False)
         Session = scoped_session(some_session)
         self.__session = Session()
+
