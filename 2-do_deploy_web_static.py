@@ -4,11 +4,10 @@ using the function do_deploy"""
 
 import os
 
-from fabric.api import put, run, task, env
+from fabric.api import *
 
 
 env.hosts = ["52.201.69.229", "54.152.232.249"]
-env.user = "ubuntu"
 
 
 def do_deploy(archive_path):
