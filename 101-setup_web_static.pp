@@ -1,4 +1,4 @@
-# using Puppet toet up the web servers for the deployment of web_static
+# using Puppet to set up the web servers for the deployment of web_static
 exec { '/usr/bin/env apt -y update' : }
 -> package { 'nginx':
   ensure => installed,

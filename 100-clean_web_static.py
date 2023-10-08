@@ -16,8 +16,7 @@ def do_clean(number=0):
     number is 2, keeps the most and second-most recent archives,
     etc.
     """
-
-    number = int(number)
+ number = int(number)
 
     if number == 0:
         number = 2
