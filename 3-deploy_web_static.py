@@ -1,53 +1,69 @@
 #!/usr/bin/python3
-"""A Fabric script that generates a .tgz archive from the contents of
+"""A  Fabric script that generates a .tgz archive from the contents of
 the web_static folder of your AirBnB Clone repo, using the function do_pack."""
-import os.path
-import time
-from fabric.api import local
-from fabric.operations import env, put, run
+import os
+from datetime import datetime
 
+from fabric.api import env, local, put, run, task
 
 env.hosts = ["52.201.69.229", "54.152.232.249"]
+env.forward_agent = True
 
 
+@task
 def do_pack():
-    """Generate an tgz archive from web_static folder"""
-    try:
-        local("mkdir -p versions")
-        local("tar -cvzf versions/web_static_{}.tgz web_static/".
-              format(time.strftime("%Y%m%d%H%M%S")))
-        return ("versions/web_static_{}.tgz".format(time.
-                                                    strftime("%Y%m%d%H%M%S")))
-    except:
+    """Write a Fabric script that generates a .tgz archive from the contents of the web_static folder"""
+    date_now = datetime.now()
+
+    if not os.path.exists("versions") and not os.path.isdir("versions"):
+        local("mkdir versions")
+
+    filepth = "versions/web_static_{}{}{}{}{}{}.tgz".format(
+        date_now.year,
+        date_now.month,
+        date_now.day,
+        date_now.hour,
+        date_now.minute,
+        date_now.second,
+    )
+    local("tar -cvzf {} web_static".format(filepth))
+
+    if os.path.exists(filepth):
+        return filepth
+    else:
         return None
 
 
+@task
 def do_deploy(archive_path):
-    """Distribute an archive to web servers"""
-    if (os.path.isfile(archive_path) is False):
+    """Prototype: def do_deploy(archive_path)r"""
+    if not os.path.exists(archive_path):
+        print(archive_path)
         return False
-
     try:
-        file = archive_path.split("/")[-1]
-        folder = ("/data/web_static/releases/" + file.split(".")[0])
+        fl = archive_path.split("/")[1]
+        r = fl.split(".")[0]
         put(archive_path, "/tmp/")
-        run("mkdir -p {}".format(folder))
-        run("tar -xzf /tmp/{} -C {}".format(file, folder))
-        run("rm /tmp/{}".format(file))
-        run("mv {}/web_static/* {}/".format(folder, folder))
-        run("rm -rf {}/web_static".format(folder))
-        run('rm -rf /data/web_static/current')
-        run("ln -s {} /data/web_static/current".format(folder))
-        print("Deployment done")
+        run("mkdir -p /data/web_static/releases/{}".format(r))
+        run("tar -xzf /tmp/{} -C /data/web_static/releases/{}/".format(fl, r))
+        run(
+            "mv /data/web_static/releases/{}/web_static/* /data/web_static/releases/{}/".format(
+                r, r
+            )
+        )
+        run("rm -rf /data/web_static/releases/{}/web_static".format(r))
+        run("rm -rf /tmp/{}".format(fl))
+        run("rm -rf /data/web_static/current")
+        run("ln -s /data/web_static/releases/{} /data/web_static/current".format(r))
         return True
     except:
         return False
 
-
+@task
 def deploy():
-    """Create and distributes an archive to web servers"""
-    try:
-        path = do_pack()
-        return do_deploy(path)
-    except:
+    """deploying using the previous tasks"""
+    package = do_pack()
+    if package is None:
         return False
+    return do_deploy(package)
+       
