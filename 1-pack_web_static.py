@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Write a Fabric script that generates a .tgz archive from the contents of
+"""A Fabric script that generates a .tgz archive from the contents of
 the web_static folder of your AirBnB Clone repo, using the function do_pack."""
 import os
 from datetime import datetime
@@ -17,22 +17,11 @@ def do_pack():
     The name of the archive created must be web_static_<year><month><day><hour><minute><second>.tgz
     The function do_pack must return the archive path if the archive has been correctly generated. Otherwise, it should return None
     """
-    date_now = datetime.now()
-
-    if not os.path.exists("versions") and not os.path.isdir("versions"):
-        local("mkdir versions")
-
-    filepth = "versions/web_static_{}{}{}{}{}{}.tgz".format(
-        date_now.year,
-        date_now.month,
-        date_now.day,
-        date_now.hour,
-        date_now.minute,
-        date_now.second,
-    )
-    local("tar -cvzf {} web_static".format(filepth))
-
-    if os.path.exists(filepth):
-        return filepth
-    else:
+try:
+        local("mkdir -p versions")
+        local("tar -cvzf versions/web_static_{}.tgz web_static/".
+              format(time.strftime("%Y%m%d%H%M%S")))
+        return ("versions/web_static_{}.tgz".format(time.
+                                                    strftime("%Y%m%d%H%M%S")))
+    except:
         return None
